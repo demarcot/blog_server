@@ -1,8 +1,24 @@
+const fs = require('fs');
 const express = require('express');
 const publicRouter = express.Router();
 const models = require('./db/models');
 const crypto = require('crypto');
 const roles = require('./roles');
+const jwt = require('jsonwebtoken');
+const priKey = fs.readFileSync('./assets/private/private_key.pem');
+const pPhrase = require('./../assets/private/secrets').key;
+
+publicRouter.get('/blogs', (req, res) => {
+    // Retrieve blogs
+    models.Blog.find()
+    .then((docs) => {
+        res.send(docs);
+    })
+    .catch((err) => {
+        console.err("Error finding blogs: ", err.reason);
+        res.sendStatus(404);
+    });
+});
 
 publicRouter.post('/login', (req, res) => {
     // TODO(Tom): Limit login attempts for IP and username to 3 per hour, 100 per day
@@ -10,17 +26,26 @@ publicRouter.post('/login', (req, res) => {
     // req.body.username;
     // req.body.password;
     //jwt.sign();
+    /*
+    // sign with RSA SHA256
+    var privateKey = fs.readFileSync('private.key');
+    var token = jwt.sign({ foo: 'bar' }, privateKey, { algorithm: 'RS256'});
+    */
 
     models.User.find({username: req.body.username})
     .then((docs) => {
         if(docs.length === 1)
         {
-            let h = createHash(req.body.password, docs[0].salt);
-            if(h === docs[0].hash)
+            let user = docs[0];
+            let h = createHash(req.body.password, user.salt);
+            if(h === user.hash)
             {
                 console.log('User credentials matched.');
+                console.log(pPhrase)
                 //TODO(Tom): Create JWT and return to user
-                res.send(docs);
+                let token = jwt.sign({username: user.username, role: user.role}, {key: crypto.createPrivateKey({key: priKey, passphrase: pPhrase}), passphrase: pPhrase}, {algorithm: 'RS256'}, {expiresIn: '1h'});
+                res.send({"jwt": token});
+                //response.writeHead(200, {'Authorization': token});
             } else 
             {
                 console.log('User credentials not matched.');
@@ -78,7 +103,6 @@ function createUser(req)
     u.role = req.body.role === 'author' ? roles.AUTHOR : roles.READER;
 
     return u;
-    
 }
 
 function createSalt(){
@@ -88,8 +112,8 @@ function createSalt(){
 };
 
 function createHash(password, salt){
-    var hash = crypto.createHmac('sha512', salt);
-    hash.update(password);
+    var hash = crypto.createHash('sha512');
+    hash.update(salt+password);
     var value = hash.digest('hex');
     return value;
 };

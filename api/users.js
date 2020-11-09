@@ -25,8 +25,9 @@ usersRouter.get('/:id', (req, res) => {
         if(docs.length > 1 || docs.length === 0)
         {
             res.sendStatus(404);
+        } else {
+            res.send(docs);
         }
-        res.send(docs);
     })
     .catch((err) => {
         console.log("user err: ", err);

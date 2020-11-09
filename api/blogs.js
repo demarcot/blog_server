@@ -3,17 +3,7 @@ const blogsRouter = express.Router();
 const models = require('./db/models');
 
 // --- Blog actions
-blogsRouter.get('/', (req, res) => {
-    // Retrieve blogs
-    models.Blog.find()
-    .then((docs) => {
-        res.send(docs);
-    })
-    .catch((err) => {
-        console.err("Error finding blogs: ", err.reason);
-        res.sendStatus(404);
-    });
-});
+
 
 blogsRouter.get('/:id', (req, res) => {
     let resp = {};
@@ -28,8 +18,6 @@ blogsRouter.get('/:id', (req, res) => {
             res.send(resp);
         }
     });
-    
-    
 });
 
 blogsRouter.post('/', (req, res) => {

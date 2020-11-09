@@ -2,6 +2,8 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
+const kafka = require('kafka-node');
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const helmet = require('helmet');
@@ -13,6 +15,9 @@ const app = express();
 const publicApi = require('./api/public');
 const blogsApi = require('./api/blogs');
 const usersApi = require('./api/users');
+const {key} = require('./assets/private/secrets');
+
+const pubCert = fs.readFileSync('./assets/private/public_key.pem');
 
 // TODO(Tom): Create signed cert
 /*
@@ -49,21 +54,28 @@ app.get('*', (req, res) => {
 // Verification middleware
 function verifyUser(req, res, next) {
     // TODO(Tom): Have client send JWT in Authorization header and verify
-    //jwt.verify();
-
-    /*
-    const n = Math.random()*10;
-    if(n>3)
-    {
-        next();
-    } else {
-        // TODO(Tom): Redirect to error or login page?
-        res.sendStatus(403);
-    }
-    */
-   next();
+   let tkn = req.header('Authorization');
+   jwt.verify(tkn, pubCert, {algorithms: ['RS256']}, (err, decodedTkn) => {
+       if(err)
+       {
+            console.log("Error while authorizing:", err);
+            res.sendStatus(401);
+       } else 
+       {
+            next();
+       }
+   });
 }
 
 // TODO(Tom): Listen for SIGTERM and gracefully kill server
-app.listen(8001, () => {console.log('Listening on 8001...');});
+app.listen(8001, () => {
+    /*
+    // Playing around with kafka
+    let client = new kafka.KafkaClient();
+    let consumer = new kafka.Consumer(client, [{topic: 'quickstart-events'}], {autoCommit: false});
+    consumer.on("message", (m) => {console.log(m.key + " - " + m.value);});
+    */    
+    console.log('Listening on 8001...');
+
+});
 //https.createServer(options, app).listen(8080);
