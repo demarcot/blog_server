@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const roles = require('./../roles');
+const mongoUrl = require('./../../assets/private/endpoints').mongoUrl;
 
 const blogSchema = new mongoose.Schema({
     title: String,
@@ -18,7 +19,7 @@ const userSchema = new mongoose.Schema({
 const blogModel = mongoose.model('Blogs', blogSchema, 'blogs');
 const userModel = mongoose.model('Users', userSchema, 'users');
 
-mongoose.connect("mongodb://localhost:27017/blog_db", {useNewUrlParser: true, useUnifiedTopology: true})
+mongoose.connect(mongoUrl, {useNewUrlParser: true, useUnifiedTopology: true})
 .catch((error) => {
     console.error("There was a problem connecting to the DB: ", error);
 });

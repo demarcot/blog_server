@@ -15,7 +15,6 @@ const app = express();
 const publicApi = require('./api/public');
 const blogsApi = require('./api/blogs');
 const usersApi = require('./api/users');
-const {key} = require('./assets/private/secrets');
 
 const pubCert = fs.readFileSync('./assets/private/public_key.pem');
 

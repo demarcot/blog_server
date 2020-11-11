@@ -22,15 +22,6 @@ publicRouter.get('/blogs', (req, res) => {
 
 publicRouter.post('/login', (req, res) => {
     // TODO(Tom): Limit login attempts for IP and username to 3 per hour, 100 per day
-    // TODO(Tom): Using req data, verify user account and create signed JWT, have client store JWT in local storage
-    // req.body.username;
-    // req.body.password;
-    //jwt.sign();
-    /*
-    // sign with RSA SHA256
-    var privateKey = fs.readFileSync('private.key');
-    var token = jwt.sign({ foo: 'bar' }, privateKey, { algorithm: 'RS256'});
-    */
 
     models.User.find({username: req.body.username})
     .then((docs) => {
@@ -41,8 +32,6 @@ publicRouter.post('/login', (req, res) => {
             if(h === user.hash)
             {
                 console.log('User credentials matched.');
-                console.log(pPhrase)
-                //TODO(Tom): Create JWT and return to user
                 let token = jwt.sign({username: user.username, role: user.role}, {key: crypto.createPrivateKey({key: priKey, passphrase: pPhrase}), passphrase: pPhrase}, {algorithm: 'RS256'}, {expiresIn: '1h'});
                 res.send({"jwt": token});
                 //response.writeHead(200, {'Authorization': token});
@@ -67,6 +56,7 @@ publicRouter.post('/login', (req, res) => {
     });
 });
 
+//TODO(Tom): Limit based on email, IP, max allowed users, captcha?
 publicRouter.post('/create-user', (req, res) => {
     // What limitations are needed to avoid abuse?
     models.User.find({username: req.body.username})
