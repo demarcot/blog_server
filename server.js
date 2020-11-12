@@ -53,17 +53,22 @@ app.get('*', (req, res) => {
 // Verification middleware
 function verifyUser(req, res, next) {
     // TODO(Tom): Have client send JWT in Authorization header and verify
-   let tkn = req.header('Authorization');
-   jwt.verify(tkn, pubCert, {algorithms: ['RS256']}, (err, decodedTkn) => {
-       if(err)
-       {
-            console.log("Error while authorizing:", err);
-            res.sendStatus(401);
-       } else 
-       {
-            next();
-       }
-   });
+    let auth = req.header('Authorization');
+    if(!auth || !auth.toLowerCase().includes('bearer ')) {
+        res.sendStatus(401);
+    } else {
+        tkn = auth.split(' ')[1];
+        jwt.verify(tkn, pubCert, {algorithms: ['RS256']}, (err, decodedTkn) => {
+            if(err)
+            {
+                console.log("Error while authorizing:", err);
+                res.sendStatus(401);
+            } else 
+            {
+                next();
+            }
+        });
+    }
 }
 
 // TODO(Tom): Listen for SIGTERM and gracefully kill server

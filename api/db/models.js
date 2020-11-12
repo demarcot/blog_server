@@ -3,8 +3,9 @@ const roles = require('./../roles');
 const mongoUrl = require('./../../assets/private/endpoints').mongoUrl;
 
 const blogSchema = new mongoose.Schema({
+    o_id: mongoose.Schema.Types.ObjectId,
     title: String,
-    post: String,
+    body: String,
     author: String,
     likes: Number
 });

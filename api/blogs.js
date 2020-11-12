@@ -24,7 +24,7 @@ blogsRouter.post('/', (req, res) => {
     // Create new blog entry in storage
     models.Blog.create(req.body)
     .then((doc) => {
-        res.send('Blog submitted');
+        res.status(200).send({desc: 'Blog submitted'});
     })
     .catch((err) => {
         console.log("Error creating blog: ", err);

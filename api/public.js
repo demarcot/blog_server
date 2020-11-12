@@ -5,6 +5,7 @@ const models = require('./db/models');
 const crypto = require('crypto');
 const roles = require('./roles');
 const jwt = require('jsonwebtoken');
+const pubKey = fs.readFileSync('./assets/private/public_key.pem');
 const priKey = fs.readFileSync('./assets/private/private_key.pem');
 const pPhrase = require('./../assets/private/secrets').key;
 
@@ -18,6 +19,25 @@ publicRouter.get('/blogs', (req, res) => {
         console.err("Error finding blogs: ", err.reason);
         res.sendStatus(404);
     });
+});
+
+publicRouter.get('/verify', (req, res) => {
+    let auth = req.header('Authorization');
+    if(!auth || !auth.toLowerCase().includes('bearer ')) {
+        res.sendStatus(401);
+    } else {
+        tkn = auth.split(' ')[1];
+        jwt.verify(tkn, pubCert, {algorithms: ['RS256']}, (err, decodedTkn) => {
+            if(err)
+            {
+                console.log("Error while authorizing:", err);
+                res.sendStatus(401);
+            } else 
+            {
+                res.sendStatus(200);
+            }
+        });
+    }
 });
 
 publicRouter.post('/login', (req, res) => {
