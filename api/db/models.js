@@ -19,6 +19,7 @@ blogSchema.set('toJSON', {
 const userSchema = new mongoose.Schema({
     username: String,
     role: String,
+    likes: Array,
     hash: String,
     salt: String
 });

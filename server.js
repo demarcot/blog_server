@@ -1,46 +1,27 @@
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
-
-const kafka = require('kafka-node');
-
 const express = require('express');
-const jwt = require('jsonwebtoken');
+const jwt = require('./jwt');
 const helmet = require('helmet');
 const cors = require('cors');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
 
-const app = express();
 const publicApi = require('./api/public');
 const blogsApi = require('./api/blogs');
 const usersApi = require('./api/users');
-
-const pubCert = fs.readFileSync('./assets/private/public_key.pem');
-
-// TODO(Tom): Create signed cert
-/*
-const options = {
-    key: fs.readFileSync("/srv/www/keys/my-site-key.pem"),
-    cert: fs.readFileSync("/srv/www/keys/chain.pem")
-};
-*/
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-
 app.use(cors());
-
 // Redirects remain HTTPS
 app.use(helmet());
 
-// -- Protected routes --
-app.use('/api/blogs', verifyUser, blogsApi);
-app.use('/api/users', verifyUser, usersApi);
+app.use(errHandler);
 
+// -- Protected routes --
+app.use('/api/blogs', verifier, blogsApi);
+app.use('/api/users', verifier, usersApi);
 // -- Public facing routes --
 app.use('/api/public', publicApi);
-
 
 app.get('*', (req, res) => {
     // TODO(Tom): If logged in go to home, else go to login page
@@ -48,38 +29,44 @@ app.get('*', (req, res) => {
 });
 // -- END Public facing routes --
 
-
-
 // Verification middleware
-function verifyUser(req, res, next) {
-    // TODO(Tom): Have client send JWT in Authorization header and verify
-    let auth = req.header('Authorization');
-    if(!auth || !auth.toLowerCase().includes('bearer ')) {
+//TODO(Tom): Stick user and role in req after verification?
+function verifier(req, res, next) {
+    let token = jwt.getJwtFromAuthHeader(req.header('Authorization'));
+    if(!token) {
         res.sendStatus(401);
     } else {
-        tkn = auth.split(' ')[1];
-        jwt.verify(tkn, pubCert, {algorithms: ['RS256']}, (err, decodedTkn) => {
-            if(err)
-            {
-                console.log("Error while authorizing:", err);
-                res.sendStatus(401);
-            } else 
-            {
-                next();
-            }
-        });
+        if(jwt.verifyUser(token)) {
+            next();
+        } else {
+            res.sendStatus(401);
+        }
     }
 }
 
+function errHandler(err, req, res, next) {
+    console.log("Handling err: ", err.message);
+    res.status(400).send(err.message);
+}
+
 // TODO(Tom): Listen for SIGTERM and gracefully kill server
-app.listen(8001, () => {
-    /*
+app.listen(8001, () => {        
+    console.log('Listening on 8001...');
+});
+
+// TODO(Tom): Create signed cert
+/*
+const options = {
+    key: fs.readFileSync("/srv/www/keys/my-site-key.pem"),
+    cert: fs.readFileSync("/srv/www/keys/chain.pem")
+};
+
+https.createServer(options, app).listen(8080);
+*/
+
+/*
     // Playing around with kafka
     let client = new kafka.KafkaClient();
     let consumer = new kafka.Consumer(client, [{topic: 'quickstart-events'}], {autoCommit: false});
     consumer.on("message", (m) => {console.log(m.key + " - " + m.value);});
-    */    
-    console.log('Listening on 8001...');
-
-});
-//https.createServer(options, app).listen(8080);
+*/

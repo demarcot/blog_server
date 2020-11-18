@@ -77,7 +77,7 @@ publicRouter.post('/login', (req, res) => {
 });
 
 //TODO(Tom): Limit based on email, IP, max allowed users, captcha?
-publicRouter.post('/create-user', (req, res) => {
+publicRouter.post('/register', (req, res) => {
     // What limitations are needed to avoid abuse?
     models.User.find({username: req.body.username})
     .then((docs) => {
@@ -90,7 +90,7 @@ publicRouter.post('/create-user', (req, res) => {
             let u = createUser(req);
             models.User.create(u)
             .then((doc) => {
-                res.send('User created');
+                res.status(200).send({desc: 'Blog submitted'});
             })
             .catch((err) => {
                 console.log("Error creating user: ", err);
