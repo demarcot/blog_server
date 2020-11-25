@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
-const pubCert = fs.readFileSync('./assets/private/public_key.pem');
+const pubCert = fs.readFileSync(__dirname + '/assets/private/public_key.pem');
 
 function verifyUser(token) {
     let verified = false;

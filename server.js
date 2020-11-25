@@ -4,9 +4,9 @@ const jwt = require('./jwt');
 const helmet = require('helmet');
 const cors = require('cors');
 
-const publicApi = require('./api/public');
-const blogsApi = require('./api/blogs');
-const usersApi = require('./api/users');
+const publicRouter = require('./api/router/publicRouter');
+const blogRouter = require('./api/router/blogRouter');
+const userRouter = require('./api/router/userRouter');
 const app = express();
 
 app.use(express.json());
@@ -18,10 +18,10 @@ app.use(helmet());
 app.use(errHandler);
 
 // -- Protected routes --
-app.use('/api/blogs', verifier, blogsApi);
-app.use('/api/users', verifier, usersApi);
+app.use('/api/blogs', verifier, blogRouter);
+app.use('/api/users', verifier, userRouter);
 // -- Public facing routes --
-app.use('/api/public', publicApi);
+app.use('/api/public', publicRouter);
 
 app.get('*', (req, res) => {
     // TODO(Tom): If logged in go to home, else go to login page

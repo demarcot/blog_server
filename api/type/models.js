@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-const roles = require('./../roles');
-const mongoUrl = require('./../../assets/private/endpoints').mongoUrl;
+const mongoUrl = require('../../assets/private/endpoints').mongoUrl;
 
 
 const blogSchema = new mongoose.Schema({

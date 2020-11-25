@@ -1,13 +1,12 @@
 const fs = require('fs');
 const express = require('express');
 const publicRouter = express.Router();
-const models = require('./db/models');
+const models = require('../type/models');
 const crypto = require('crypto');
-const roles = require('./roles');
+const roles = require('../type/roles');
 const jwt = require('jsonwebtoken');
-const pubKey = fs.readFileSync('./assets/private/public_key.pem');
-const priKey = fs.readFileSync('./assets/private/private_key.pem');
-const pPhrase = require('./../assets/private/secrets').key;
+const priKey = fs.readFileSync(__dirname + '/../../assets/private/private_key.pem');
+const pPhrase = require('./../../assets/private/secrets').key;
 
 publicRouter.get('/blogs', (req, res) => {
     // Retrieve blogs
