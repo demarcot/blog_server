@@ -5,7 +5,6 @@ const jwt = require('../../jwt');
 const persistor = require('../db/persistor');
 
 blogRouter.get('/:id', (req, res) => {
-
     persistor.getBlog(req.params.id)
     .then((r) => {
         if(r.ok) {
@@ -38,20 +37,21 @@ blogRouter.put('/likes/:id', (req, res) => {
     });
 });
 
-// CREATE Blog
 blogRouter.post('/', (req, res) => {
-    // Fail if author is not same as token user
-    if(isUserAuthor(jwt.getJwtFromAuthHeader(req.header('Authorization')), req.body['author'])) {
+    if(!isUserAuthor(jwt.getJwtFromAuthHeader(req.header('Authorization')), req.body['author'])) {
         res.sendStatus(401);
     } else {
-        // Create new blog entry in storage
-        models.Blog.create(req.body)
-        .then((doc) => {
-            res.status(200).send({desc: 'Blog submitted'});
+        persistor.createBlog(req.body)
+        .then((r) => {
+            if(r.ok) {
+                res.status(200).send({desc: r.msg});
+            } else {
+                res.status(404).send({desc: r.msg});
+            }
         })
         .catch((err) => {
-            console.log("Error creating blog: ", err);
-            res.sendStatus(404);
+            console.log("Error creating blog: ", err.message);
+            res.status(404).send({desc: err.msg});
         });
     }
 });
@@ -59,7 +59,7 @@ blogRouter.post('/', (req, res) => {
 // UPDATE Blog
 blogRouter.post('/:id', (req, res) => {
     // Fail if author is not same as token user
-    if(isUserAuthor(jwt.getJwtFromAuthHeader(req.header('Authorization')), req.body['author'])) {
+    if(!isUserAuthor(jwt.getJwtFromAuthHeader(req.header('Authorization')), req.body['author'])) {
         res.sendStatus(401);
     } else {
         // Create new blog entry in storage
@@ -81,7 +81,7 @@ blogRouter.delete('/:id', (req, res) => {
 });
 
 function isUserAuthor(token, author) {
-    let tokenUser = jwt.getTokenPayload(token)['user'];
+    let tokenUser = jwt.getTokenPayload(token)['username'];
     if(author != tokenUser) {
         console.error("Author and token user mismatch: ", author, ", ", tokenUser);
         return false;

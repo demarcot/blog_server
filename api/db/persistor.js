@@ -7,7 +7,7 @@ async function getUser(id) {
         ok: false,
         msg: "Unknown",
         data: null
-    }
+    };
 
     try {
         const txnResults = await s.withTransaction(async () => {
@@ -15,11 +15,13 @@ async function getUser(id) {
             if(u.length > 1 || u.length === 0) {
                 r.msg = "Duplicate or nonexistant user."
                 r.ok = false;
+                return;
             } else {
                 r.msg = "User found."
                 r.data = u; // Do I need to say u[0]?
                 r.ok = true;
             }
+            return true;
         });
 
         if(txnResults) {
@@ -40,7 +42,7 @@ async function getBlog(id) {
         ok: false,
         msg: "Unknown",
         data: null
-    }
+    };
 
     try {
         const txnResults = await s.withTransaction(async () => {
@@ -48,11 +50,13 @@ async function getBlog(id) {
             if(b.length > 1 || b.length === 0) {
                 r.msg = "Duplicate or nonexistant blog."
                 r.ok = false;
+                return;
             } else {
                 r.msg = "Blog found."
                 r.data = b; // Do I need to say b[0]?
                 r.ok = true;
             }
+            return true;
         });
 
         if(txnResults) {
@@ -73,7 +77,7 @@ async function likeBlog(user, blogId) {
     let r = {
         ok: false,
         msg: "Unknown"
-    }
+    };
 
     try {
         const txnResults = await s.withTransaction(async () => {
@@ -87,6 +91,7 @@ async function likeBlog(user, blogId) {
             }
             await models.User.updateOne({username: user}, {$push: {likes: blogId}}, {session: s});
             await models.Blog.updateOne({_id: blogId}, {$inc: {likes: 1}}, {session: s});
+            return true;
         });
 
         if(txnResults) {
@@ -105,11 +110,40 @@ async function likeBlog(user, blogId) {
     return r;
 }
 
+async function createBlog(blog) {
+    const s = await mongoose.startSession();
+    let r = {
+        ok: false,
+        msg: "Unknown"
+    };
+
+    try {
+        const txnResults = await s.withTransaction(async () => {
+            await models.Blog.create([blog], {session: s});
+            return Promise.resolve(true);
+        });
+
+        if(txnResults) {
+            r.ok = true;
+            r.msg = "Blog created.";
+        } else {
+            r.msg = "Blog blocked from Create."
+        }
+    } catch (err) {
+        r.msg = "Blog Create failed: " + err.message;
+    } finally {
+        s.endSession();
+    }
+
+    return r;
+}
+
 const persistor = {
     getUser,
 
     getBlog,
     likeBlog,
+    createBlog,
 };
 
 module.exports = persistor;
