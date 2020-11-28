@@ -120,7 +120,7 @@ async function createBlog(blog) {
     try {
         const txnResults = await s.withTransaction(async () => {
             await models.Blog.create([blog], {session: s});
-            return Promise.resolve(true);
+            return true;
         });
 
         if(txnResults) {
@@ -138,12 +138,72 @@ async function createBlog(blog) {
     return r;
 }
 
+async function updateBlog(id, blog) {
+    const s = await mongoose.startSession();
+    let r = {
+        ok: false,
+        msg: "Unknown"
+    };
+
+    try {
+        const txnResults = await s.withTransaction(async () => {
+            await models.Blog.updateOne({_id: id}, blog, {session: s});
+            return true;
+        });
+
+        if(txnResults) {
+            r.ok = true;
+            r.msg = "Blog updated successfully.";
+        } else {
+            r.msg = "Blog not updated.";
+        }
+    } catch (err) {
+        console.log("Error updating blog: ", err.message);
+        r.msg = "Blog Update failed: " + err.message;
+    } finally {
+        s.endSession();
+    }
+
+    return r;
+}
+
+async function deleteBlog(id, username) {
+    const s = await mongoose.startSession();
+    let r = {
+        ok: false,
+        msg: "Unknown"
+    };
+
+    try {
+        const txnResults = await s.withTransaction(async () => {
+            await models.Blog.deleteOne({_id: id, author: username}, {session: s});
+            return true;
+        });
+
+        if(txnResults) {
+            r.ok = true;
+            r.msg = "Blog deleted successfully."
+        } else {
+            r.msg = "Blog not deleted";
+        }
+    } catch (err) {
+        console.log("Error deleting blog: ", err.message);
+        r.msg = "Blog Delete failed: " + err.message;
+    } finally {
+        s.endSession();
+    }
+
+    return r;
+}
+
 const persistor = {
     getUser,
 
     getBlog,
     likeBlog,
     createBlog,
+    updateBlog,
+    deleteBlog,
 };
 
 module.exports = persistor;

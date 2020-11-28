@@ -62,22 +62,35 @@ blogRouter.post('/:id', (req, res) => {
     if(!isUserAuthor(jwt.getJwtFromAuthHeader(req.header('Authorization')), req.body['author'])) {
         res.sendStatus(401);
     } else {
-        // Create new blog entry in storage
-        models.Blog.updateOne({_id: req.params.id}, req.body)
-        .then((doc) => {
-            res.status(200).send({desc: 'Blog updated'});
+        persistor.updateBlog(req.params.id, req.body)
+        .then((r) => {
+            if(r.ok) {
+                res.status(200).send({desc: r.msg});
+            } else {
+                res.status(404).send({desc: r.msg});
+            } 
         })
         .catch((err) => {
-            console.log("Error updating blog: ", err);
-            res.sendStatus(404);
+            console.log("Error updating blog: ", err.message);
+            res.status(404).send({desc: err.msg});
         });
     }
 });
 
 // DELETE Blog
 blogRouter.delete('/:id', (req, res) => {
-    // Delete blog with given id
-    res.send('Deleting given blog post...');
+    persistor.deleteBlog(req.params.id, jwt.getTokenPayload(jwt.getJwtFromAuthHeader(req.header('Authorization'))).username)
+    .then((r) => {
+        if(r.ok) {
+            res.status(200).send({desc: r.msg});
+        } else {
+            res.status(404).send({desc: r.msg});
+        } 
+    })
+    .catch((err) => {
+        console.log("Error deleting blog: ", err.message);
+        res.status(404).send({desc: err.msg});
+    });
 });
 
 function isUserAuthor(token, author) {
