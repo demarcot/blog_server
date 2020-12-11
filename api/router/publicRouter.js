@@ -5,6 +5,7 @@ const models = require('../type/models');
 const crypto = require('crypto');
 const roles = require('../type/roles');
 const jwt = require('jsonwebtoken');
+const pubCert = fs.readFileSync(__dirname + '/../../assets/private/public_key.pem');
 const priKey = fs.readFileSync(__dirname + '/../../assets/private/private_key.pem');
 const pPhrase = require('./../../assets/private/secrets').key;
 
