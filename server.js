@@ -14,23 +14,19 @@ app.use(express.urlencoded({extended: true}));
 app.use(cors());
 // Redirects remain HTTPS
 app.use(helmet());
-
 app.use(errHandler);
 
 // -- Protected routes --
 app.use('/api/blogs', verifier, blogRouter);
 app.use('/api/users', verifier, userRouter);
+
 // -- Public facing routes --
 app.use('/api/public', publicRouter);
-
 app.get('*', (req, res) => {
-    // TODO(Tom): If logged in go to home, else go to login page
     res.sendStatus(404);
 });
-// -- END Public facing routes --
 
 // Verification middleware
-//TODO(Tom): Stick user and role in req after verification?
 function verifier(req, res, next) {
     let token = jwt.getJwtFromAuthHeader(req.header('Authorization'));
     if(!token) {
@@ -44,14 +40,45 @@ function verifier(req, res, next) {
     }
 }
 
+// Error Handler
 function errHandler(err, req, res, next) {
     console.log("Handling err: ", err.message);
     res.status(400).send(err.message);
 }
 
-// TODO(Tom): Listen for SIGTERM and gracefully kill server
-app.listen(8001, () => {        
+// Server startup
+let server = app.listen(8001, () => {        
     console.log('Listening on 8001...');
+});
+
+// Process termination handler
+process.on('SIGTERM', () => {
+    if(server.listening) {
+        server.close((err) => {
+            if(err) {
+                console.log("Error shutting down on SIGTERM: ", err.message);
+                process.exit(1);
+            } else {
+                console.log("Server stopped successfully.");
+                process.exit();
+            }
+        })
+    }
+});
+
+// Process termination handler
+process.on('SIGINT', () => {
+    if(server.listening) {
+        server.close((err) => {
+            if(err) {
+                console.log("Error shutting down on SIGINT: ", err.message);
+                process.exit(1);
+            } else {
+                console.log("Server stopped successfully.");
+                process.exit();
+            }
+        })
+    }
 });
 
 // TODO(Tom): Create signed cert
